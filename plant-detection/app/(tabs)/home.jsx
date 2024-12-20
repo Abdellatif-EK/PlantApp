@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Button, Image, View, StyleSheet, Text } from 'react-native';
+import React, { useState } from 'react';
+import { Button, Image, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function Home() {
@@ -8,60 +8,35 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const [prediction, setPrediction] = useState(null);
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const uploadImage = async () => {
-    if (!image) {
-      setMessage('Please select an image first');
-      return;
-    }
-
-    setUploading(true);
-    setMessage('');
-
-    const formData = new FormData();
-    formData.append('file', {
-      uri: image,
-      name: 'photo.jpg',
-      type: 'image/jpeg',
-    });
-    console.log(image);
-    try {
-          const response = await fetch('http://192.168.1.10:8008/predict', {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (response.ok) {
-            const jsonResponse = await response.json();
-            setMessage('Image uploaded successfully!');
-            setPrediction(jsonResponse);
-          } else {
-            setMessage('Upload failed, please try again.');
-            console.log('Error:', response.status);
-          }
-        } catch (error) {
-          setMessage('An error occurred while uploading.');
-          console.log('Error:', error);
-        } finally {
-          setUploading(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Button title="Pick an image from camera roll" onPress={pickImage} />
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Home</Text>
+      </View>
+
+      {/* Middle Section */}
+      <View style={styles.middleSection}>
+        {/* Plants Container */}
+        <TouchableOpacity style={styles.card}>
+          <Image
+            source={require('../../assets/images/plants-image.png')} // Replace with actual image URL
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Plants</Text>
+        </TouchableOpacity>
+
+        {/* Diseases Container */}
+        <TouchableOpacity style={styles.card}>
+          <Image
+            // source={{ uri: 'https://example.com/diseases-image.jpg' }} // diseases-image  Replace with actual image URL
+            source={require('../../assets/images/diseases-image.jpg')}
+            style={styles.cardImage}
+          />
+          <Text style={styles.cardText}>Diseases</Text>
+        </TouchableOpacity>
+      </View>
+
       {image && <Image source={{ uri: image }} style={styles.image} />}
       {image && (
         <Button
@@ -85,12 +60,46 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
+    paddingTop: 20,
+  },
+  header: {
+    position: 'absolute',
+    top: 10,
+    left: 20,
+  },
+  headerText: {
+    padding: 10,
+    color: 'black',
+    fontSize: 35,
+    fontWeight: 'bold',
+  },
+  middleSection: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  card: {
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 10,
+    elevation: 2,
+  },
+  cardImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  cardText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   image: {
     width: 200,
     height: 200,
     marginTop: 20,
+    alignSelf: 'center',
   },
 });

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -5,232 +6,276 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  Dimensions,
+  Animated,
 } from 'react-native';
-import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import { useNavigation } from '@react-navigation/native'; // Import navigation
-import { useRouter } from 'expo-router'; // Import router
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 export default function DetectionResult() {
-  const item = useLocalSearchParams(); // Assuming item is coming from search params
-  const navigation = useNavigation(); // Initialize navigation
-  const router = useRouter(); // Initialize router
+  const item = useLocalSearchParams();
+  const navigation = useNavigation();
+  const router = useRouter();
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const details = {
     Rose: 'A beautiful flower known for its fragrance.',
     'Fungal Infection': 'Common treatment includes antifungal sprays.',
-    'Late Blight': 'fuck yeah',
-    Healthy: 'shit',
+    'Late Blight': 'A serious disease affecting potatoes and tomatoes.',
+    Healthy: 'No disease present, continue regular care.',
   };
 
   const data = [
     {
-      name: 'Rose',
-      Description: 'A beautiful flower known for its fragrance.',
-      Traitement: 'Regular watering and sunlight exposure.',
-      Symptômes: 'Wilting leaves, discoloration.',
-      Image: 'path/to/rose-image.jpg',
-      Type: 'Flower',
+      plantClass: 'Potato__Early_blight',
+      name: 'Early Blight',
+      Description: `Early blight of potato is caused by the fungus Alternaria solani, which can infect potato, tomato, other members of the potato family, and some mustards. This disease, also known as target spot, typically affects older leaves first and is favored by warm temperatures and high humidity. The fungus can survive in plant debris and soil, making crop rotation and proper sanitation important for management.`,
+      Treatment: `To manage early blight, use fungicides such as chlorothalonil or mancozeb. Ensure proper plant spacing to improve air circulation and reduce humidity around the plants. Remove and destroy infected plant debris to reduce the source of inoculum. Crop rotation with non-host crops can also help reduce disease pressure.`,
+      Symptoms: `Early blight symptoms include dark, concentric rings on older leaves, often referred to as target spots. These spots can enlarge and cause the leaves to yellow and die prematurely. In severe cases, the disease can also affect stems and tubers, leading to reduced yield and quality.`,
+      Image: require('../../assets/images/early-blight.jpg'),
+      Type: 'Fungal Disease',
     },
     {
-      name: 'Fungal Infection',
-      Description: 'A common disease affecting plants.',
-      Traitement: 'Use antifungal sprays and improve air circulation.',
-      Symptômes: 'Moldy spots on leaves, stunted growth.',
-      Image: 'path/to/fungal-infection-image.jpg',
-      Type: 'Infection',
-    },
-    {
-      name: 'Late Blight',
-      Description: 'A serious disease that affects potatoes and tomatoes.',
-      Traitement: 'Remove infected plants and apply fungicides.',
-      Symptômes: 'Dark spots on leaves, rotting fruit.',
-      Image: 'path/to/late-blight-image.jpg',
-      Type: 'Disease',
-    },
-    {
-      name: 'Healthy',
-      Description: 'No disease present.',
-      Traitement: 'Continue regular care.',
-      Symptômes: 'Vibrant leaves, strong growth.',
-      Image: 'path/to/healthy-plant-image.jpg',
-      Type: 'Healthy',
+      plantClass: 'Pepper__bell__healthy',
+      name: 'Pepper Bell Healthy',
+      Description: `Healthy bell pepper plants are characterized by vibrant green leaves, strong stems, and an abundance of flowers and fruits. These plants thrive in well-drained soil with plenty of organic matter and require consistent watering to maintain soil moisture. Bell peppers are sensitive to temperature extremes and grow best in warm, sunny conditions.`,
+      Advices: `To maintain healthy bell pepper plants, provide them with a balanced fertilizer high in phosphorus and potassium. Mulch around the plants to conserve moisture and suppress weeds. Regularly inspect the plants for pests such as aphids and caterpillars, and use appropriate control measures if necessary. Prune the plants to improve air circulation and support fruit development.`,
+      Image: require('../../assets/images/bell-pepper.jpg'),
+      Type: 'Vegetable',
     },
   ];
 
-  const plantClass = item.class;
-  const confidence = item.confidence;
+  // Check if item.class exists and matches 'Potato__Early_blight' or 'Pepper__bell__healthy'
+  const plantData =
+    item.class === 'Potato__Early_blight'
+      ? data[0]
+      : item.class === 'Pepper__bell___healthy'
+      ? data[1]
+      : data[0]; // Default to 'Early Blight' if no match
+
+  const confidence = (item.confidence * 100).toFixed(2) + '%';
+
+  const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+  const ExpandableSection = ({ title, content }) => {
+    const [expanded, setExpanded] = useState(false);
+    const animation = new Animated.Value(expanded ? 1 : 0);
+
+    const toggleExpand = () => {
+      setExpanded(!expanded);
+      Animated.timing(animation, {
+        toValue: expanded ? 0 : 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const bodyHeight = animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1000],
+    });
+
+    return (
+      <View style={styles.expandableSection}>
+        <TouchableOpacity onPress={toggleExpand} style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={24}
+            color="#555"
+          />
+        </TouchableOpacity>
+        <Animated.View style={[styles.sectionContent, { height: bodyHeight }]}>
+          <Text style={styles.sectionText}>{content}</Text>
+        </Animated.View>
+      </View>
+    );
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.ScrollViewContent}>
-      <Image
-        source={require('../../assets/images/early-blight.jpg')}
-        style={styles.Background}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: 40,
-          left: 15,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <LinearGradient colors={['#6a994e', '#386641']} style={styles.header}>
         <TouchableOpacity
           onPress={() => {
             router.back();
             router.back();
           }}
+          style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={30} color="black" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text
-          style={{
-            fontSize: 25,
-            fontFamily: 'outfit-bold',
-            color: 'black',
-            paddingLeft: 15,
-          }}
+        <Text style={styles.headerTitle}>Plant Detection</Text>
+      </LinearGradient>
+      <View style={styles.imageContainer}>
+        <Image source={plantData.Image} style={styles.backgroundImage} />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)']}
+          style={styles.imageForeground}
         >
-          Detection
-        </Text>
+          <Text style={styles.imageTitle}>{plantData.plantClass}</Text>
+          <Text style={styles.imageSubtitle}>{plantData.Type}</Text>
+          <View style={styles.confidenceContainer}>
+            <Text style={styles.confidenceText}>Confidence: {confidence}</Text>
+          </View>
+        </LinearGradient>
       </View>
-      <View style={styles.TextContainer}>
-        <Text
-          style={{ fontSize: 40, fontFamily: 'outfit-bold', textAlign: 'left' }}
-        >
-          Early Blight
-        </Text>
-        <Text
-          style={{
-            fontSize: 20,
-            fontFamily: 'outfit-bold',
-            textAlign: 'left',
-            color: 'green',
-          }}
-        >
-          Fungus
-        </Text>
-        <Text style={{ fontFamily: 'outfit', fontSize: 20, paddingTop: 20 }}>
-          Description :
-        </Text>
-        <Text style={{ fontFamily: 'outfit', padding: 10 }}>
-          Early blight of potato is caused by the fungus, Alternaria solani,
-          which can cause disease in potato, tomato, other members of the potato
-          family, and some mustards. This disease, also known as target spot,
-          rarely affects young, vigorously growing plants. It is found on older
-          leaves first. Early blight is favored by warm temperatures and high
-          humidity.
-        </Text>
-        <Text style={{ fontFamily: 'outfit', fontSize: 20, paddingTop: 20 }}>
-          Symptoms :
-        </Text>
-        <Text style={{ fontFamily: 'outfit', padding: 10 }}>
-          Spots begin as small, dark, dry, papery flecks, which grow to become
-          brown-black, circular-to-oval areas. The spots are often bordered by
-          veins that make them angular. The spots usually have a target
-          appearance, caused by concentric rings of raised and depressed dead
-          tissue. A yellowish or greenish-yellow ring is often seen bordering
-          the growing spots. As the spots become very large, they often cause
-          the entire leaf to become yellow and die. This is especially true on
-          the lower leaves, where spots usually occur first and can be very
-          abundant. The dead leaves do not usually fall off. Dark brown to black
-          spots can occur on stems.
-        </Text>
-        <Text style={{ fontFamily: 'outfit', fontSize: 20, paddingTop: 20 }}>
-          Prevention :
-        </Text>
-        <Text style={{ fontFamily: 'outfit', padding: 10 }}>
-          Varieties resistant to this disease are available. In general, late
-          maturing varieties are more resistant than the earlier maturing
-          varieties. Keep plants healthy; stressed plants are more predisposed
-          to early blight. Avoid overhead irrigation. Do not dig tubers until
-          they are fully mature in order to prevent damage. Do not use a field
-          for potatoes that was used for potatoes or tomatoes the previous year.
-          Keep this year’s field at least 225 to 450 yards away from last year’s
-          field. Surround the field with wheat to keep wind-blown spores from
-          entering. Use adequate nitrogen levels and low phosphorus levels to
-          reduce disease severity. See current recommendations for chemical
-          control measures.
-        </Text>
-        <Text style={{ fontFamily: 'outfit', fontSize: 20, paddingTop: 20 }}>
-          Treatement :
-        </Text>
-        <Text style={{ fontFamily: 'outfit', padding: 10 }}>
-          To treat plant diseases effectively:
-        </Text>
-        <Text>
-          1. **Improve Air Circulation**: Prune or stake plants to enhance
-          airflow, reducing fungal issues.
-        </Text>
-        <Text>
-          2. **Disinfect Tools**: Clean pruning shears with a bleach solution (1
-          part bleach to 4 parts water) after each cut.
-        </Text>
-        <Text>
-          3. **Maintain Clean Soil**: Keep the soil free from debris and add
-          organic compost to prevent spore splashing.
-        </Text>
-        <Text>
-          4. **Water Management**: Use drip irrigation or soaker hoses to keep
-          foliage dry.
-        </Text>
-        <Text>
-          5. **Fungicide Application**: Apply copper-based fungicides early,
-          before the disease appears, or at the first sign of infection. Reapply
-          every 7-10 days as needed.
-        </Text>
-        <Text>
-          6. **Insect and Fungus Control**: Use Bonide Garden Dust, containing
-          copper and pyrethrins, to control insects and fungi. Cover leaves with
-          a thin, even layer and reapply every 7-10 days.
-        </Text>
-        <Text>
-          7. **Bio-fungicide Use**: Apply SERENADE Garden bio-fungicide as a
-          preventative measure, starting before disease development and
-          repeating weekly.
-        </Text>
-        <Text>
-          8. **Post-Harvest Clean-Up**: Remove and destroy all garden debris
-          after harvest and practice crop rotation the following year. Burn or
-          bag infected plant parts; do not compost.
-        </Text>
+      <View style={styles.contentContainer}>
+        <ExpandableSection title="Description" content={plantData.Description} />
+        {plantData.Symptoms && (
+          <ExpandableSection title="Symptoms" content={plantData.Symptoms} />
+        )}
+        {plantData.Treatment && (
+          <ExpandableSection title="Treatment" content={plantData.Treatment} />
+        )}
+        {plantData.Advices && (
+          <ExpandableSection title="Advices" content={plantData.Advices} />
+        )}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="leaf-outline" size={24} color="#fff" />
+            <Text style={styles.actionButtonText}>More Info</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]}>
+            <Ionicons name="share-outline" size={24} color="#386641" />
+            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
+              Share
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>{plantClass ? plantClass : 'No class available.'}</Text>
-        <Text>{confidence ? confidence : 'No details available.'}</Text>
-      </View> */}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+  scrollViewContent: {
+    flexGrow: 1,
+    backgroundColor: '#f7f7f7',
   },
-  text: {
-    fontSize: 24,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 15,
+  },
+  imageContainer: {
+    height: 300,
+    width: '100%',
+    position: 'relative',
+  },
+  backgroundImage: {
+    height: '100%',
+    width: '100%',
+    resizeMode: 'cover',
+  },
+  imageForeground: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    justifyContent: 'flex-end',
+    padding: 20,
+  },
+  imageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 5,
+  },
+  imageSubtitle: {
+    fontSize: 18,
+    color: '#f0f0f0',
+    marginBottom: 10,
+  },
+  confidenceContainer: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  confidenceText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  contentContainer: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -27,
+  },
+  expandableSection: {
+    marginBottom: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#e0e0e0',
+  },
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  ScrollViewContent: {
-    flexGrow: 1,
-    justifyContent: 'flex-start', // Change to 'flex-start' to allow scrolling
+  sectionContent: {
+    overflow: 'hidden',
+  },
+  sectionText: {
+    fontSize: 16,
+    color: '#444',
+    padding: 15,
+    lineHeight: 24,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  actionButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    justifyContent: 'center',
+    backgroundColor: '#386641',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    flex: 1,
+    marginRight: 10,
   },
-  Background: {
-    height: 300,
-    width: 350,
-    marginTop: 80,
-    borderRadius: 15,
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
-  TextContainer: {
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    paddingLeft: 10,
+  secondaryButton: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#386641',
+  },
+  secondaryButtonText: {
+    color: '#386641',
   },
 });

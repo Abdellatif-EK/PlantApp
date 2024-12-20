@@ -148,7 +148,7 @@ export default function PlantScanner() {
     });
     //console.log(image);
     try {
-      const response = await fetch('http://192.168.1.10:8008/predict', {
+      const response = await fetch('http://192.168.0.112:8000/predict', {
         method: 'POST',
         body: formData,
       });
@@ -190,7 +190,7 @@ export default function PlantScanner() {
         />
         <View style={{ position: 'relative', zIndex: 1 }}>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>
-            Uploading...
+            Predecting...
           </Text>
           <ActivityIndicator size="large" color="#4CAF50" />
         </View>

@@ -50,7 +50,7 @@ export default function SignUp() {
     console.log('Password:', password);
 
     axios
-      .post('http://192.168.0.112:3000/register', userData)
+      .post('http://192.168.0.112:3000/api/users/register', userData)
       .then((res) => {
         console.log(res.data);
         if (res.data.status == 'ok') {

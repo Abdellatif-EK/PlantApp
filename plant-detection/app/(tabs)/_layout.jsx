@@ -80,7 +80,7 @@ export default function TabLayout() {
               }}
             >
               <Image
-                source={icons.Detection}
+                source={icons.Community}
                 contentFit="contain"
                 style={{
                   height: 22,
@@ -97,7 +97,7 @@ export default function TabLayout() {
                   textAlign: 'center',
                 }}
               >
-                Detection
+                Chat
               </Text>
             </View>
           ),
