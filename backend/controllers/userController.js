@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET =
-  '96727152f374579890ba6bc6d5ae5093f24437aba2d08478a7327fc3e96c0197';
+  '***';
 
 // Register a new user
 exports.registerUser = async (req, res) => {
